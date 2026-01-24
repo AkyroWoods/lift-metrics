@@ -46,6 +46,7 @@ public class UserInterface {
                     deleteWorkout();
                     break;
                 case 5:
+                    help();
                     break;
                 case 6:
                     break;
@@ -59,7 +60,7 @@ public class UserInterface {
         System.out.println("2: Load workout");
         System.out.println("3: List saved workouts");
         System.out.println("4: Delete workout");
-        System.out.println("5: Print commands ");
+        System.out.println("5: Reprint commands ");
         System.out.println("6: Quit main menu");
 
     }
@@ -137,6 +138,10 @@ public class UserInterface {
         } else {
             System.out.println(RED + "Failed to delete workout." + RESET);
         }
+    }
+
+    public void help() {
+        printMainMenu();
     }
 
     private void loadedWorkoutMenu(Workout workout) {
