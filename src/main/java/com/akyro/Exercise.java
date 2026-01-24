@@ -51,6 +51,26 @@ public class Exercise {
         return muscleGroup;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setSets(int sets) {
+        this.sets = sets;
+    }
+
+    public void setReps(int reps) {
+        this.reps = reps;
+    }
+
+    public void setWeight(double weight) {
+        this.weight = weight;
+    }
+
+    public void setMuscleGroup(String muscleGroup) {
+        this.muscleGroup = muscleGroup;
+    }
+
     public double calculateTotalVolume() {
         return weight * (sets * reps);
     }
