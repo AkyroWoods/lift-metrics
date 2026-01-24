@@ -72,11 +72,11 @@ public class WorkoutStorage {
         List<String> workouts = new ArrayList<>();
 
         try (Stream<Path> jsonFiles = Files.list(dirPath)) {
-            jsonFiles.filter(Files:: isRegularFile)
-            .filter(path -> path.getFileName().toString().endsWith(".json"))
-            .forEach(path -> workouts.add(path.getFileName().toString()));
+            jsonFiles.filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().endsWith(".json"))
+                    .forEach(path -> workouts.add(path.getFileName().toString()));
         } catch (IOException e) {
-            System.err.println("No files in directory: " + e.getMessage());
+            System.err.println("Error reading data directory: " + e.getMessage());
         }
         return workouts;
     }
