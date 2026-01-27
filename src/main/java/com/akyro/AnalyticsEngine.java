@@ -3,9 +3,12 @@ package com.akyro;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class AnalyticsEngine {
     private double pushVolume;
@@ -116,6 +119,21 @@ public class AnalyticsEngine {
         ppl.put("Legs", getLegsPercentage());
         return ppl;
     }
+    
+    public WorkoutComparison compareWorkouts(Workout a, Workout b) {
+        double aVolume = a.calculateTotalWorkoutVolume();
+        double bVolume = b.calculateTotalWorkoutVolume();
+        double volumeDifference = Math.abs(bVolume - aVolume);
+        Set<String> namesA = getExerciseNames(a);
+        Set<String> namesB = getExerciseNames(b);
+
+        List<String> uniqueToA = uniqueExercises(namesA, namesB);
+        List<String> uniqueToB = uniqueExercises(namesB, namesA);
+        List<String> commonExercises = sharedExercises(namesA, namesB);
+
+        return new WorkoutComparison(aVolume, bVolume, volumeDifference,
+             uniqueToA, uniqueToB, commonExercises);
+    }
 
     public double getPushPercentage() {
         return pushVolume / totalVolume();
@@ -144,5 +162,24 @@ public class AnalyticsEngine {
             return 1;
         }
         return totalVolume;
+    }
+
+    private Set<String> getExerciseNames(Workout workout) {
+       return workout.getExercises()
+       .stream()
+       .map(Exercise :: getName)
+       .collect(Collectors.toSet());
+    }
+
+    private List<String> sharedExercises(Set<String> a, Set<String> b) {
+        Set<String> exercises = new HashSet<>(a);
+        exercises.retainAll(b);
+        return new ArrayList<>(exercises);
+    }
+
+    private List<String> uniqueExercises(Set<String> a, Set<String> b) {
+        Set<String> exercises = new HashSet<>(a);
+        exercises.removeAll(b);
+        return new ArrayList<>(exercises);
     }
 }
