@@ -27,12 +27,14 @@ public class UserInterface {
     private final WorkoutStorage storage = new WorkoutStorage();
     private final PrintMenus menuPrinter = new PrintMenus();
     private final WorkoutEditor workoutEditor;
+    private final AnalyticsPrinter analyticsPrinter;
     private boolean workoutSaved = true;
 
     public UserInterface(Scanner scanner) {
         this.scanner = scanner;
         this.inputReader = new InputReader(scanner);
         this.workoutEditor = new WorkoutEditor(inputReader);
+        this.analyticsPrinter = new AnalyticsPrinter(engine);
     }
 
     public void start() {
@@ -49,11 +51,12 @@ public class UserInterface {
 
     private static final int MAIN_MENU_MIN = 1;
     private static final int MAIN_MENU_MAX = 8;
+
     private void runMainMenu() {
         menuPrinter.printMainMenu();
         while (true) {
-          int cmd = inputReader.readMenuChoice("Command: ", 
-          MAIN_MENU_MIN, MAIN_MENU_MAX);
+            int cmd = inputReader.readMenuChoice("Command: ",
+                    MAIN_MENU_MIN, MAIN_MENU_MAX);
 
             switch (cmd) {
                 case CREATE_WORKOUT:
@@ -86,12 +89,12 @@ public class UserInterface {
     }
 
     private void createWorkout() {
-        String workoutName = readNonBlankString(CYAN + "Name of Workout: " + RESET);
+        String workoutName = inputReader.readNonBlankString(CYAN + "Name of Workout: " + RESET);
 
         while (workoutName.isBlank()) {
             System.out.println(RED + "Invalid workout name" + RESET);
             System.out.print(CYAN + "Name of Workout: " + RESET);
-            workoutName = readNonBlankString(CYAN + "Name of Workout: " + RESET);
+            workoutName = inputReader.readNonBlankString(CYAN + "Name of Workout: " + RESET);
         }
         Workout workout = new Workout(workoutName);
         System.out.println();
@@ -124,62 +127,16 @@ public class UserInterface {
     }
 
     private void compareWorkouts() {
-        if (storage.getSavedWorkouts().size() == 0) {
+        if (storage.getSavedWorkouts().size() < 2) {
             System.out.println(RED + "Insufficient workout data, please log 2 workouts minimum to compare");
+            return;
         }
         Workout a = storage.loadWorkout(chooseWorkoutFile());
         System.out.println(YELLOW + "First Workout Selected" + RESET);
         Workout b = storage.loadWorkout(chooseWorkoutFile());
         WorkoutComparison result = engine.compareWorkouts(a, b);
         System.out.println();
-        printComparison(result, a, b);
-    }
-
-    private void printComparison(WorkoutComparison result, Workout a, Workout b) {
-        printCondensedWorkoutSummary(a);
-        System.out.println("--------------------------------------------------");
-        System.out.println();
-        printCondensedWorkoutSummary(b);
-
-        System.out.println(CYAN + "=== " + a.getName() + " V.S " + b.getName() + " ===" + RESET);
-
-        double percent = result.volumeDifferenceAsPercent();
-        if (a.calculateTotalWorkoutVolume() > b.calculateTotalWorkoutVolume()) {
-            System.out.println(a.getName() + " volume was greater by +" + result.getVolumeDifference()
-                    + " lbs (+" + formatPercent(percent) + ")");
-        } else if (b.calculateTotalWorkoutVolume() > a.calculateTotalWorkoutVolume()) {
-            System.out.println(b.getName() + " volume was greater by +" + result.getVolumeDifference()
-                    + " lbs (+" + formatPercent(percent) + ")");
-        } else {
-            System.out.println("No difference in volume");
-        }
-
-        System.out.println();
-
-        System.out.println("Common Exercises: ");
-        if (result.getCommonExercises().size() == 0) {
-            System.out.println(YELLOW + " - None in common" + RESET);
-        }
-        result.getCommonExercises().forEach(e -> System.out.println(" - " + e));
-        System.out.println();
-
-        System.out.println("Unique to " + a.getName() + ":");
-        result.getUniqueToA().forEach(e -> System.out.println(" - " + e));
-        System.out.println();
-
-        System.out.println("Unique to " + b.getName() + ":");
-        result.getUniqueToB().forEach(e -> System.out.println(" - " + e));
-        System.out.println();
-    }
-
-    private void printCondensedWorkoutSummary(Workout workout) {
-        System.out.println(CYAN + "=== " + workout.getName() + " Summary" + " ===" + RESET);
-        System.out.println("Total Volume: " + workout.calculateTotalWorkoutVolume() + " lbs");
-        System.out.println("Exercises:");
-        for (Exercise e : workout.getExercises()) {
-            System.out.println(" - " + e.getName() + ": " + e.calculateTotalVolume() + " lbs");
-        }
-        System.out.println();
+        analyticsPrinter.printComparison(result, a, b);
     }
 
     private void deleteWorkout() {
@@ -195,15 +152,12 @@ public class UserInterface {
             fileCounter++;
         }
 
-        int cmd = readPositiveInteger("Choose a workout to delete: ") - 1;
+        int cmd = inputReader.readMenuChoice("Choose a workout to delete",
+                1, storage.getSavedWorkouts().size()) - 1;
 
-        while (cmd < 0 || cmd >= workouts.size()) {
-            System.out.println(RED + "Invalid Option. Try again" + RESET);
-            cmd = readPositiveInteger("Choose a workout to delete: ") - 1;
-        }
         String workoutToDelete = workouts.get(cmd);
 
-        System.out.print(YELLOW + "Are you sure you want to delete '" + workoutToDelete + "? (y/n): " + RESET);
+        System.out.print(YELLOW + "Are you sure you want to delete " + workoutToDelete + "? (y/n): " + RESET);
         String confirm = scanner.nextLine().trim().toLowerCase();
 
         if (!confirm.equals("y")) {
@@ -220,7 +174,7 @@ public class UserInterface {
         }
     }
 
-    public void quit() {
+    private void quit() {
         System.out.println(YELLOW + "Exiting program..." + RESET);
         System.exit(0);
     }
@@ -242,7 +196,7 @@ public class UserInterface {
 
         while (true) {
             int cmd = inputReader.readMenuChoice("Command: ",
-             LOADED_WORKOUT_MENU_MIN, LOADED_WORKOUT_MENU_MAX);
+                    LOADED_WORKOUT_MENU_MIN, LOADED_WORKOUT_MENU_MAX);
 
             switch (cmd) {
                 case ADD_EXERCISE:
@@ -279,21 +233,13 @@ public class UserInterface {
     }
 
     private void addExerciseToWorkout(Workout workout) {
-        String name = readNonBlankString("Name: ");
-        int sets = readPositiveInteger("Sets: ");
-        int reps = readPositiveInteger("Reps: ");
-        double weight = readNonNegativeDouble("Weight: ");
-        String muscleGroup = readNonBlankString("Muscle Group: ");
-
-        Exercise exercise = new Exercise(name, sets, reps, weight, muscleGroup);
-        workout.addExercise(exercise);
+        workoutEditor.addExerciseToWorkout(workout);
         workoutSaved = false;
         System.out.println(GREEN + "Exercise added" + RESET);
-
     }
 
     private void printWorkoutList(Workout workout) {
-        if (emptyWorkoutErrorMessage(workout)) {
+        if (emptyWorkout(workout)) {
             return;
         }
         workout.printWorkout();
@@ -301,36 +247,32 @@ public class UserInterface {
     }
 
     private void editExercise(Workout workout) {
-        if (emptyWorkoutErrorMessage(workout)) {
+        if (emptyWorkout(workout)) {
             return;
         }
         workout.printWorkout();
         workoutEditor.editExercise(workout);
         workoutSaved = false;
 
-        System.out.println(GREEN  + "Exercise Updated! " + RESET);
+        System.out.println(GREEN + "Exercise Updated! " + RESET);
     }
 
     private void viewWorkoutSummary(Workout workout) {
-        if (emptyWorkoutErrorMessage(workout)) {
+        if (emptyWorkout(workout)) {
             return;
         }
-        prepareAnalytics(workout);
-        Exercise e = engine.getHighestVolumeExercise();
 
         System.out.println(CYAN + "\n=== Workout Summary ===" + RESET);
         System.out.println("Workout: " + workout.getName());
         System.out.println("Total Sets: " + workout.totalSets());
         System.out.println("Total Reps: " + workout.totalReps());
         System.out.println("Total Volume: " + workout.calculateTotalWorkoutVolume() + " lbs");
-        System.out.println("Highest Volume Exercise: " +
-                GREEN + e.getName() + RESET +
-                " (" + e.calculateTotalVolume() + " lbs)");
+        
         System.out.println();
     }
 
     private void saveWorkout(Workout workout) {
-        if (emptyWorkoutErrorMessage(workout)) {
+        if (emptyWorkout(workout)) {
             return;
         }
         if (storage.saveWorkout(workout)) {
@@ -368,18 +310,13 @@ public class UserInterface {
                     .println(fileCounter + ". " + workoutData + " (Created at: " + fileCreationDate(workoutData) + ")");
             fileCounter++;
         }
-        System.out.print("Enter the number of the workout to load: ");
-        int input = Integer.valueOf(scanner.nextLine()) - 1;
 
-        while (input < 0 || input >= workouts.size()) {
-            System.out.println("Please enter a valid workout to load");
-            System.out.print("Enter the number of the workout to load: ");
-            input = Integer.valueOf(scanner.nextLine()) - 1;
-        }
-
+        int maxNumberOfWorkouts = workouts.size();
+        int input = inputReader.readMenuChoice("Choose workout to load",
+                1, maxNumberOfWorkouts) - 1;
         String fileName = workouts.get(input);
-        return fileName;
 
+        return fileName;
     }
 
     private String fileCreationDate(String fileName) {
@@ -396,127 +333,15 @@ public class UserInterface {
         }
     }
 
-    private void prepareAnalytics(Workout workout) {
-        engine.calculateVolumeBreakdown(workout);
-    }
-
     private void showWorkoutAnalytics(Workout workout) {
-        prepareAnalytics(workout);
-
-        System.out.println(CYAN + "\n=== Workout Analytics ===" + RESET);
-
-        var top3 = engine.topNExercises(workout, 3);
-        System.out.println(YELLOW + "Top 3 Exercises by Volume:" + RESET);
-        for (var entry : top3) {
-            System.out.println(" - " + entry.getKey().getName() + ": " + formatPercent(entry.getValue()));
-        }
-
-        var bottom3 = engine.bottomNExercises(workout, 3);
-
-        System.out.println(YELLOW + "\nBottom 3 Exercises by Volume:" + RESET);
-
-        if (bottom3.isEmpty()) {
-            System.out.println(RED + "  Not enough exercises to display the bottom 3." + RESET);
-        } else {
-            for (var entry : bottom3) {
-                System.out.println(" - " + entry.getKey().getName() + ": " + formatPercent(entry.getValue()));
-            }
-        }
-
-        var ppl = engine.volumePercentageSplit();
-        System.out.println(YELLOW + "\nPush / Pull / Legs Split:" + RESET);
-        System.out.println(" - Push: " + formatSafePercent(ppl.get("Push")));
-        System.out.println(" - Pull: " + formatSafePercent(ppl.get("Pull")));
-        System.out.println(" - Legs: " + formatSafePercent(ppl.get("Legs")));
-
-        Exercise highest = engine.getHighestVolumeExercise();
-        System.out.println(YELLOW + "\nHighest Volume Exercise:" + RESET);
-        System.out.println(" - " + GREEN + highest.getName() + RESET +
-                " (" + highest.calculateTotalVolume() + " lbs)");
+        analyticsPrinter.printWorkoutAnalytics(workout);
     }
 
-    private boolean emptyWorkoutErrorMessage(Workout workout) {
+    private boolean emptyWorkout(Workout workout) {
         if (workout.size() == 0) {
             System.out.println(RED + "The workout has no exercises added." + RESET);
             return true;
         }
         return false;
     }
-
-    private String formatPercent(double value) {
-        return String.format("%.2f%%", value * 100);
-    }
-
-    private String formatSafePercent(double value) {
-        if (value <= 0) {
-            System.out.println("No data available");
-        }
-        return formatPercent(value);
-    }
-
-    private boolean isInteger(String input) {
-        try {
-            Integer.parseInt(input);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
-    }
-
-    private String readNonBlankString(String prompt) {
-        while (true) {
-            System.out.print(YELLOW + prompt + RESET);
-            String input = scanner.nextLine();
-
-            if (input.isBlank()) {
-                System.out.println(RED + "Please enter a non blank name" + RESET);
-                continue;
-            }
-            if (!input.matches(".*[a-zA-Z].*")) {
-                System.out.println(RED + "Exercise name must contain at least one letter" + RESET);
-                continue;
-            }
-            return input;
-        }
-    }
-
-    private int readPositiveInteger(String prompt) {
-        while (true) {
-            System.out.print(YELLOW + prompt + RESET);
-            String input = scanner.nextLine();
-
-            if (!isInteger(input)) {
-                System.out.println(RED + "Please enter a whole number" + RESET);
-                continue;
-            }
-
-            int value = Integer.parseInt(input);
-
-            if (value < 1) {
-                System.out.println(RED + "Please enter a positive number" + RESET);
-                continue;
-            }
-            return value;
-        }
-    }
-
-    private double readNonNegativeDouble(String prompt) {
-        while (true) {
-            System.out.print(YELLOW + prompt + RESET);
-            String input = scanner.nextLine();
-
-            try {
-                double weight = Double.parseDouble(input);
-                if (weight < 0) {
-                    System.out.println(RED + "Please enter a non negative number" + RESET);
-                    continue;
-                }
-                return weight;
-
-            } catch (NumberFormatException e) {
-                System.out.println(RED + "Please enter a number" + RESET);
-            }
-        }
-    }
-
 }
