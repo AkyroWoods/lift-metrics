@@ -17,7 +17,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 public class WorkoutStorage {
     private ObjectMapper mapper;
     private static final Pattern ILLEGAL_FILENAME_CHARS = Pattern.compile("[\\\\/:*?\"<>]");
-    private static final String REPLACEMENT_CHAR = "-";
     private static final String DATA_DIR = "data";
 
     public WorkoutStorage() {
@@ -29,7 +28,7 @@ public class WorkoutStorage {
         if (!createDirectory()) {
             return false;
         }
-        String fileName = sanitizeFileName(workout.getName());
+        String fileName = uniqueFileName(workout.getName());
         File file = new File(DATA_DIR, fileName);
 
         try {
@@ -50,11 +49,12 @@ public class WorkoutStorage {
             return null;
         }
     }
+
     public List<Workout> loadAllWorkouts() {
         List<Workout> workouts = new ArrayList<>();
         Path path = Paths.get(DATA_DIR);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(path, "*.json")) {
-            for (Path entry: stream) {
+            for (Path entry : stream) {
                 String fileName = entry.getFileName().toString();
                 Workout loadedWorkout = loadWorkout(fileName);
                 if (loadedWorkout != null) {
@@ -88,18 +88,39 @@ public class WorkoutStorage {
         }
     }
 
-    private String sanitizeFileName(String workoutName) {
-        String sanitizedName = ILLEGAL_FILENAME_CHARS.matcher(workoutName).replaceAll(REPLACEMENT_CHAR);
+    private String uniqueFileName(String workout) {
+        String base = sanitizeWorkoutName(workout);
+        String extension = ".json";
+
+        String potentialName = base + extension;
+        Path path = Paths.get(DATA_DIR, potentialName);
+        if (!Files.exists(path)) {
+            return potentialName;
+        }
+
+        int counter = 1;
+        while (true) {
+            potentialName = base + " (" + counter + ")" + extension;
+            path = Paths.get(DATA_DIR, potentialName);
+            if (!Files.exists(path)) {
+                return potentialName;
+            }
+            counter++;
+        }
+    }
+
+    private String sanitizeWorkoutName(String workoutName) {
+        String sanitizedName = ILLEGAL_FILENAME_CHARS.matcher(workoutName).replaceAll("");
         sanitizedName = sanitizedName.trim();
-        sanitizedName = sanitizedName.replaceAll("-+", REPLACEMENT_CHAR); // Remove potential double hyphens
+        sanitizedName = sanitizedName.replaceAll("-+", "-"); // Remove potential double hyphens
         sanitizedName = sanitizedName.replaceAll("^-+", ""); // Remove leading hyphens
         sanitizedName = sanitizedName.replaceAll("-+$", "");
 
         if (sanitizedName.isEmpty()) { // If sanitization removes all characters use default filename
             sanitizedName = "Workout";
         }
+        return sanitizedName;
 
-        return sanitizedName + ".json";
     }
 
     private List<String> listFiles() {

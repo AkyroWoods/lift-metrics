@@ -14,7 +14,7 @@ import java.time.format.DateTimeFormatter;
 
 public class UserInterface {
 
-    //Color Constants
+    // Color Constants
     private static final String RED = "\u001B[31m";
     private static final String GREEN = "\u001B[32m";
     private static final String YELLOW = "\u001B[33m";
@@ -112,11 +112,11 @@ public class UserInterface {
 
         if (loadedWorkouts.isEmpty()) {
             System.out.println(RED + "No saved workouts found" + RESET);
+            return;
         }
-
         System.out.println(CYAN + "Loaded " + loadedWorkouts.size() + " workouts successfully" + RESET);
-        for (Workout workout: loadedWorkouts) {
-            System.out.println(GREEN + "Loaded: " + workout.getName() + " .json" + RESET);
+        for (Workout workout : loadedWorkouts) {
+            System.out.println(GREEN + "Loaded: " + workout.getName() + RESET);
         }
     }
 
@@ -130,8 +130,8 @@ public class UserInterface {
 
         int fileCounter = 1;
         for (String workoutData : workouts) {
-            System.out.println(fileCounter + ". " + workoutData + 
-            " (Created at: " + fileCreationDate(workoutData) + ")");
+            System.out.println(fileCounter + ". " + workoutData +
+                    " (Created at: " + fileCreationDate(workoutData) + ")");
             fileCounter++;
         }
 
@@ -218,7 +218,7 @@ public class UserInterface {
                 case EDIT_EXERCISE:
                     editExercise(workout);
                     break;
-                case DELETE_EXERCISE: 
+                case DELETE_EXERCISE:
                     workoutEditor.deleteExercise(workout);
                     break;
                 case VIEW_SUMMARY:
@@ -296,7 +296,8 @@ public class UserInterface {
 
     private boolean handleQuitLoadedMenu(Workout workout) {
         if (!workoutSaved) {
-            String input = inputReader.readNonBlankString(YELLOW + "You have unsaved changes. Save before returning? (y/n): " + RESET);
+            String input = inputReader
+                    .readNonBlankString(YELLOW + "You have unsaved changes. Save before returning? (y/n): " + RESET);
 
             if (input.equals("y")) {
                 saveWorkout(workout);
@@ -318,14 +319,15 @@ public class UserInterface {
         int fileCounter = 1;
         for (String workoutData : workouts) {
 
-            System.out.println(fileCounter + ". " + workoutData + " (Created at: " + fileCreationDate(workoutData) + ")");
+            System.out
+                    .println(fileCounter + ". " + workoutData + " (Created at: " + fileCreationDate(workoutData) + ")");
             fileCounter++;
         }
 
         int maxNumberOfWorkouts = workouts.size();
         int input = inputReader.readMenuChoice("Choose workout to load: ",
                 1, maxNumberOfWorkouts) - 1;
-                System.out.println();
+        System.out.println();
         String fileName = workouts.get(input);
 
         return fileName;
