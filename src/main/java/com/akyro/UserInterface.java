@@ -14,7 +14,7 @@ import java.time.format.DateTimeFormatter;
 
 public class UserInterface {
 
-    // ===== Color Constants =====
+    //Color Constants
     private static final String RED = "\u001B[31m";
     private static final String GREEN = "\u001B[32m";
     private static final String YELLOW = "\u001B[33m";
@@ -88,12 +88,6 @@ public class UserInterface {
 
     private void createWorkout() {
         String workoutName = inputReader.readNonBlankString(CYAN + "Name of Workout: " + RESET);
-
-        while (workoutName.isBlank()) {
-            System.out.println(RED + "Invalid workout name" + RESET);
-            System.out.print(CYAN + "Name of Workout: " + RESET);
-            workoutName = inputReader.readNonBlankString(CYAN + "Name of Workout: " + RESET);
-        }
         Workout workout = new Workout(workoutName);
         System.out.println();
 
@@ -119,9 +113,11 @@ public class UserInterface {
 
         int fileCounter = 1;
         for (String workoutData : workouts) {
-            System.out.println(fileCounter + ". " + workoutData);
+            System.out.println(fileCounter + ". " + workoutData + 
+            " (Created at: " + fileCreationDate(workoutData) + ")");
             fileCounter++;
         }
+
     }
 
     private void compareWorkouts() {
@@ -266,7 +262,6 @@ public class UserInterface {
         System.out.println("Total Sets: " + workout.totalSets());
         System.out.println("Total Reps: " + workout.totalReps());
         System.out.println("Total Volume: " + FormatUtils.formatNumber(workout.calculateTotalWorkoutVolume()) + " lbs");
-
         System.out.println();
     }
 

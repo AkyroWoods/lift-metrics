@@ -41,7 +41,7 @@ public class WorkoutStorage {
     }
 
     public Workout loadWorkout(String filename) {
-        Path filePath = Paths.get("data/", filename);
+        Path filePath = Paths.get(DATA_DIR, filename);
         try {
             return mapper.readValue(filePath.toFile(), Workout.class);
         } catch (IOException e) {
@@ -60,8 +60,7 @@ public class WorkoutStorage {
     }
 
     private boolean createDirectory() {
-        String dirname = DATA_DIR;
-        Path path = Paths.get(dirname);
+        Path path = Paths.get(DATA_DIR);
 
         try {
             Files.createDirectories(path);
@@ -87,7 +86,7 @@ public class WorkoutStorage {
     }
 
     private List<String> listFiles() {
-        Path dirPath = Paths.get("data/");
+        Path dirPath = Paths.get(DATA_DIR);
         List<String> workouts = new ArrayList<>();
 
         try (Stream<Path> jsonFiles = Files.list(dirPath)) {

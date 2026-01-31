@@ -105,10 +105,9 @@ public class AnalyticsEngine {
         if (entries.size() <= n) {
             return Collections.emptyList();
         }
+
         int size = entries.size();
-
         int start = Math.max(0, size - n);
-
         return entries.subList(start, size);
     }
 
@@ -157,7 +156,6 @@ public class AnalyticsEngine {
 
     private double totalVolume() {
         double totalVolume = pushVolume + pullVolume + legsVolume;
-        // Prevent division by 0 before analysis runs
         if (totalVolume == 0) {
             return 1;
         }

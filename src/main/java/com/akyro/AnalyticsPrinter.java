@@ -16,7 +16,6 @@ public class AnalyticsPrinter {
         engine.calculateVolumeBreakdown(workout);
 
         System.out.println(CYAN + "\n=== Workout Analytics ===" + RESET);
-
         var top3 = engine.topNExercises(workout, 3);
         System.out.println(YELLOW + "Top 3 Exercises by Volume:" + RESET);
         for (var entry : top3) {
@@ -24,9 +23,7 @@ public class AnalyticsPrinter {
         }
 
         var bottom3 = engine.bottomNExercises(workout, 3);
-
         System.out.println(YELLOW + "\nBottom 3 Exercises by Volume:" + RESET);
-
         if (bottom3.isEmpty()) {
             System.out.println(RED + "  Not enough exercises to display the bottom 3." + RESET);
         } else {
@@ -56,13 +53,13 @@ public class AnalyticsPrinter {
         
         System.out.println(CYAN + "=== " + a.getName() + " V.S " + b.getName() + " ===" + RESET);
         printVolumeDifference(result, a, b);
-        
         System.out.println();
         
         System.out.println("Common Exercises: ");
         if (result.getCommonExercises().isEmpty()) {
             System.out.println(YELLOW + " - None in common" + RESET);
         }
+        
         result.getCommonExercises().forEach(e -> System.out.println(" - " + e));
         System.out.println();
         

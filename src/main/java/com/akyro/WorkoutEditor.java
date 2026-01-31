@@ -26,12 +26,12 @@ public class WorkoutEditor {
     private static final int EDIT_FIELD_MAX = 6;
 
     public void editExercise(Workout workout) {
-        workout.printWorkout();
         int exerciseInput = inputReader.readMenuChoice("Enter number of exericse to edit: ",
                 EDIT_EXERCISE_MENU_MIN, workout.size()) - 1;
         System.out.println();
 
         Exercise editedExercise = workout.getExercises().get(exerciseInput);
+        System.out.println(CYAN + editedExercise + RESET);
 
         System.out.println("1: Name");
         System.out.println("2: Sets");
@@ -41,7 +41,7 @@ public class WorkoutEditor {
         System.out.println("6: Done editing");
 
         while (true) {
-            int editField = inputReader.readMenuChoice("Choose a field to edit",
+            int editField = inputReader.readMenuChoice("Choose a field to edit: ",
                     EDIT_FIELD_MIN, EDIT_FIELD_MAX);
 
             switch (editField) {
